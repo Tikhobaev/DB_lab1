@@ -35,21 +35,23 @@ def main():
         search_functions = [film_db.search_by_name, film_db.search_by_year,
                             film_db.search_by_rate, film_db.search_by_id]
         search_result = search_functions[mode](entries[mode].get())
-        print(entries[mode].get())
+        print_data(search_result)
 
+    def print_db():
+        print_data(film_db.db)
+
+    def print_data(data):
         field_values_to_show = []
         for i in range(0, NUMBER_OF_FIELDS):
-            field_values_to_show.append('\n'.join([str(val[i]) for val in search_result]))
+            field_values_to_show.append('\n'.join([str(val[i]) for val in data]))
 
-        if search_result:
+        if data:
             for i in range(0, NUMBER_OF_FIELDS):
                 field_labels[i].config(text=field_values_to_show[i])
         else:
             for i in range(0, NUMBER_OF_FIELDS):
                 field_labels[i].config(text="")
 
-    def print_db():
-        pass
 
     def add():
         film_db.add([name_input.get(), year_input.get(),
@@ -62,9 +64,7 @@ def main():
     root.title('Interactive database')
     root.geometry('600x500+350+70')
 
-    rows = [['Rembo', '1980', 8.9, 111], ['Rembo', '1990', 9.2, 222]]
-    film_db = FilmsDatabase(rows)
-
+    film_db = FilmsDatabase('Data/films.hdb', 'Data/films.hdbd')
     btn_print = Button(text="print db", command=print_db)  # нажатие
     btn_search = Button(text="search", command=search)  # нажатие
     btn_add = Button(text="add element", command=add)  # нажатие
