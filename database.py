@@ -1,28 +1,66 @@
+import os
+
+
 class FilmsDatabase:
-    def __init__(self, filename, handler_filename):
-        self.filename = filename
-        self.handler_filename = handler_filename
-        with open(handler_filename, 'r+') as handler:
-            self.field_names = handler.readline().split(';')
-            self.field_names[len(self.field_names) - 1] = self.field_names[len(self.field_names) - 1].replace('\n', '')
-            self.field_lengths = [int(size) for size in handler.readline().split(';')]
-            self.node_size_in_bytes = 0
-            for size in self.field_lengths:
-                self.node_size_in_bytes += size + 1
-        rows = []
-        with open(filename, 'r+') as data_file:
-            self.max_id = 0
-            for line in data_file:
-                raw_row = line.split(';')
-                rows.append([raw_row[0].replace('^', ''), int(raw_row[1]), float(raw_row[2]), int(raw_row[3])])
-                self.max_id = max(self.max_id, int(raw_row[3]))
-        if rows:
-            self.db = rows
-            self.id_dicts = dict([[rows[i][3], i] for i in range(0, len(rows))])
+    def __init__(self, *args):
+        if os.path.exists(f'Data/{args[0]}'):
+            self.filename = args[0]
+            rows = []
+            with open(f'Data/{args[0]}', 'r+') as data_file:
+                for line in data_file:
+                    raw_row = line.split(';')
+                    rows.append([raw_row[0].replace('^', ''), int(raw_row[1]), float(raw_row[2]), int(raw_row[3])])
+            if rows:
+                self.db = rows
+                self.id_dicts = dict([[rows[i][3], i] for i in range(0, len(rows))])
+            else:
+                self.db = []
+                self.id_dicts = {}
         else:
+            self.name = args[0]
             self.db = []
             self.id_dicts = {}
-        pass
+            self.filename = f'{self.name}.hdb'
+
+        self.node_size_in_bytes = 48
+        self.field_lengths = [30, 4, 3, 7]
+
+    def change(self, new_db):
+        self.filename = new_db.filename
+        self.db = new_db.db
+        self.id_dicts = new_db.id_dicts
+
+    def save_db(self, filename):
+        with open(filename, 'w') as data_file:
+            counter = 0
+            for node in self.db:
+                node[0] = node[0] + (self.field_lengths[0] - len(node[0])) * '^'
+                node[1] = str(node[1])
+                node[2] = (self.field_lengths[2] - len(str(node[2]))) * '0' + str(node[2])
+                node[3] = str(node[3])
+                counter += 1
+                data_file.write(';'.join(node))
+                if counter < len(self.db):
+                    data_file.write('\n')
+
+    @staticmethod
+    def create_db(filename):
+        with open(f'Data/{filename}', 'w') as f:
+            pass
+        return True
+
+    @staticmethod
+    def open_db(filename):
+        if os.path.exists(f'Data/{filename}'):
+            return FilmsDatabase(filename)
+        return None
+
+    @staticmethod
+    def del_db(filename):
+        if os.path.exists(f'Data/{filename}'):
+            os.remove(filename)
+            return True
+        return None
 
     def search_by_name(self, name) -> list:
         result = []
@@ -56,10 +94,14 @@ class FilmsDatabase:
         return result
 
     def add(self, new_node: list):
+        # TODO make logging
+        # if id value already exists
+        if self.id_dicts.get(new_node[3]) is not None:
+            print('This id already exists')
+            return
         try:
-            self.db.append([new_node[0], int(new_node[1]), float(new_node[2]), self.max_id + 1])
-            self.max_id += 1
-            self.id_dicts[self.max_id] = len(self.db) - 1
+            self.db.append([new_node[0], int(new_node[1]), float(new_node[2]), int(new_node[3])])
+            self.id_dicts[new_node[3]] = len(self.db) - 1
         except Exception:
             print('Incorrect data:')
 

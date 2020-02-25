@@ -9,128 +9,203 @@ SEARCH_BY_RATE = 2
 SEARCH_BY_ID = 3
 
 
-def main():
-    def search_by_name():
-        search(SEARCH_BY_NAME)
+def add_buttons(root, entries, main_database, listboxes, search_type):
+    btn_create_db = Button(root, text="Create database",
+                           command=lambda: global_action(FilmsDatabase.create_db, 'Create database', main_database))
+    btn_delete_db = Button(root, text="Delete database",
+                           command=lambda: global_action(FilmsDatabase.del_db, 'Delete database', main_database))
+    btn_open_db = Button(root, text="Open database",
+                         command=lambda: global_action(FilmsDatabase.open_db, 'Open database', main_database))
+    btn_save_db = Button(root, text="Save current database",
+                         command=lambda: save_main_db(main_database))  # нажатие
 
-    def search_by_year():
-        search(SEARCH_BY_YEAR)
+    btn_create_db.place(relheight=0.05, relwidth=0.33)
+    btn_delete_db.place(relheight=0.05, relwidth=0.33, relx=0.33)
+    btn_open_db.place(relheight=0.05, relwidth=0.34, relx=0.66)
+    btn_save_db.place(relheight=0.05, relwidth=0.5, relx=0.25, rely=0.92)
 
-    def search_by_rate():
-        search(SEARCH_BY_RATE)
+    btn_name_search = Button(root, text="Search",
+                             command=lambda: search(search_type.get(), entries, main_database, listboxes))
+    btn_name_search.place(relheight=0.05, relwidth=0.25, rely=0.05)
 
-    def search_by_id():
-        search(SEARCH_BY_ID)
 
-    def search(mode):
-        """
-        :param mode: mode of search:
-                                0 - by name,
-                                1 - by year,
-                                2 - by rate,
-                                3 - by id
-        :return:
-        """
-        entries = [name_input, year_input, rate_input, id_input]
-        search_functions = [film_db.search_by_name, film_db.search_by_year,
-                            film_db.search_by_rate, film_db.search_by_id]
-        search_result = search_functions[mode](entries[mode].get())
-        print_data(search_result)
+def add_labels(root):
+    enter_name_label = Label(root, text='Name:', font="Arial 12")
+    enter_year_label = Label(root, text='Year:', font="Arial 12")
+    enter_rate_label = Label(root, text='Rating:', font="Arial 12")
+    enter_id_label = Label(root, text='Id:', font="Arial 12")
 
-    def print_db():
-        print_data(film_db.db)
+    enter_name_label.place(relheight=0.05, relwidth=0.25, rely=0.1)
+    enter_year_label.place(relheight=0.05, relwidth=0.25, relx=0.25, rely=0.1)
+    enter_rate_label.place(relheight=0.05, relwidth=0.25, relx=0.5, rely=0.1)
+    enter_id_label.place(relheight=0.05, relwidth=0.25, relx=0.75, rely=0.1)
 
-    def print_data(data):
-        field_values_to_show = []
-        for i in range(0, NUMBER_OF_FIELDS):
-            field_values_to_show.append('\n'.join([str(val[i]) for val in data]))
 
-        if data:
-            for i in range(0, NUMBER_OF_FIELDS):
-                field_labels[i].config(text=field_values_to_show[i])
+def add_entries(root, name_input, year_input, rate_input, id_input):
+    entry_name = Entry(root, textvariable=name_input, font=12)
+    entry_year = Entry(root, textvariable=year_input, font=12)
+    entry_rate = Entry(root, textvariable=rate_input, font=12)
+    entry_id = Entry(root, textvariable=id_input, font=12)
+
+    entry_name.place(relheight=0.05, relwidth=0.25, rely=0.15)
+    entry_year.place(relheight=0.05, relwidth=0.25, relx=0.25, rely=0.15)
+    entry_rate.place(relheight=0.05, relwidth=0.25, relx=0.5, rely=0.15)
+    entry_id.place(relheight=0.05, relwidth=0.25, relx=0.75, rely=0.15)
+    return [name_input, year_input, rate_input, id_input]
+
+
+def add_scroll_listboxes(root):
+    def yview(*args):
+        for i in range(0, len(listboxes)):
+            listboxes[i].yview(*args)
+
+    scrollbar = Scrollbar(root, command=yview)
+    scrollbar.place(relheight=0.7, relwidth=0.02, relx=0.98, rely=0.2)
+
+    name_listbox = Listbox(root, yscrollcommand=scrollbar.set)
+    year_listbox = Listbox(root, yscrollcommand=scrollbar.set)
+    rate_listbox = Listbox(root, yscrollcommand=scrollbar.set)
+    id_listbox = Listbox(root, yscrollcommand=scrollbar.set)
+
+    name_listbox.place(relheight=0.7, relwidth=0.25, rely=0.2)
+    year_listbox.place(relheight=0.7, relwidth=0.25, relx=0.25, rely=0.2)
+    rate_listbox.place(relheight=0.7, relwidth=0.25, relx=0.5, rely=0.2)
+    id_listbox.place(relheight=0.7, relwidth=0.2, relx=0.75, rely=0.2)
+    listboxes = [name_listbox, year_listbox, rate_listbox, id_listbox]
+    return listboxes
+
+
+def add_menu(root):
+    mb = Menubutton(root, text="Search by...", relief=RAISED)
+    mb.place(relheight=0.05, relwidth=0.25, relx=0.75, rely=0.05)
+    mb.menu = Menu(mb, tearoff=0)
+    mb["menu"] = mb.menu
+
+    search_type_var = IntVar()
+
+    mb.menu.add_radiobutton(label="name", value=0,
+                            variable=search_type_var)
+    mb.menu.add_radiobutton(label="year", value=1,
+                            variable=search_type_var)
+    mb.menu.add_radiobutton(label="rate", value=2,
+                            variable=search_type_var)
+    mb.menu.add_radiobutton(label="id", value=3,
+                            variable=search_type_var)
+    return search_type_var
+
+
+def save_main_db(main_database):
+    main_database.save_db(main_database.filename)
+
+
+def opener(main_database, new_database):
+    if main_database:
+        main_database.save_db(main_database.filename)
+    main_database.change(new_database)
+
+
+def global_action(func, text, main_database):
+    def command_action(main_database):
+        def command_ok():
+            error_window.destroy()
+
+        if filename.get():
+            returned_value = func(filename.get())
+            if returned_value:
+                if isinstance(returned_value, FilmsDatabase):
+                    opener(main_database, returned_value)
+                create_window.destroy()
         else:
-            for i in range(0, NUMBER_OF_FIELDS):
-                field_labels[i].config(text="")
+            error_window = Toplevel()
+            error_window.geometry('300x150+750+450')
+            error_window.title('Error')
+            label_error = Label(error_window, text='Filename is not specified')
+            label_error.place(relheight=0.25, relwidth=1, rely=0.08)
+            btn_ok = Button(error_window, text='Ok', command=command_ok)
+            btn_ok.place(relheight=0.3, relwidth=0.4, relx=0.3, rely=0.45)
+
+    create_window = Toplevel()
+    create_window.title(text)
+    create_window.geometry('300x150+700+400')
+    filename = StringVar()
+    label_filename = Label(create_window, text='Enter filename:', font=14)
+    label_filename.place(relheight=0.3, relwidth=0.8, relx=0.1)
+    entry_filename = Entry(create_window, textvariable=filename, font=14)
+    entry_filename.place(relheight=0.2, relwidth=0.8, relx=0.1, rely=0.3)
+    btn_create = Button(create_window, text=text, command=lambda: command_action(main_database))
+    btn_create.place(relheight=0.2, relwidth=0.5, relx=0.25, rely=0.7)
 
 
-    def add():
-        film_db.add([name_input.get(), year_input.get(),
-                     rate_input.get(), id_input.get()])
+def search(mode, entries, main_database, listboxes):
+    """
+    :param listboxes:
+    :param entries:
+    :param main_database:
+    :param mode: mode of search:
+                            0 - by name,
+                            1 - by year,
+                            2 - by rate,
+                            3 - by id
+    :return:
+    """
+    search_functions = [main_database.search_by_name, main_database.search_by_year,
+                        main_database.search_by_rate, main_database.search_by_id]
+    if entries[mode].get():
+        search_result = search_functions[mode](entries[mode].get())
+    else:
+        search_result = []
+    print_data(search_result, listboxes)
 
-    def delete():
-        print('delete')
 
+def print_db(main_database, listboxes):
+    print_data(main_database.db, listboxes)
+
+
+def print_data(data, listboxes):
+    for listbox in listboxes:
+        listbox.delete(0, END)
+    for row in data:
+        for i in range(0, len(row)):
+            listboxes[i].insert(END, row[i])
+
+
+'''def add():
+    main_database.add([name_input.get(), year_input.get(),
+                      rate_input.get(), id_input.get()])'''
+
+
+def delete():
+    # TODO make
+    pass
+
+
+def main():
+    global main_database
     root = Tk()
     root.title('Interactive database')
-    root.geometry('600x500+350+70')
+    root.geometry('900x700+350+70')
 
+    new_db = FilmsDatabase('IMDB')
+    new_db.add(['Shawshank', '1970', '9.3', '1000222'])
+    new_db.add(['Shawshank2', '1971', '8', '1000223'])
+    new_db.save_db('Data/imdb')
+    new_db.del_db('Data/imdb.hdb')
     film_db = FilmsDatabase('Data/films.hdb', 'Data/films.hdbd')
-    btn_print = Button(text="print db", command=print_db)  # нажатие
-    btn_search = Button(text="search", command=search)  # нажатие
-    btn_add = Button(text="add element", command=add)  # нажатие
-    btn_delete = Button(text="delete element", command=delete)  # нажатие
 
-    btn_print.grid(column=0, row=0)
-    btn_add.grid(column=1, row=0)
-    btn_delete.grid(column=2, row=0)
-    btn_search.grid(column=3, row=0)
+    main_database = film_db
 
     name_input = StringVar()
     year_input = StringVar()
     rate_input = StringVar()
     id_input = StringVar()
-    entry_name = Entry(textvariable=name_input, font=12)
-    entry_year = Entry(textvariable=year_input, font=12)
-    entry_rate = Entry(textvariable=rate_input, font=12)
-    entry_id = Entry(textvariable=id_input, font=12)
-
-    entry_name.grid(row=1, column=1, columnspan=3)
-    entry_year.grid(row=2, column=1, columnspan=3)
-    entry_rate.grid(row=3, column=1, columnspan=3)
-    entry_id.grid(row=4, column=1, columnspan=3)
-
-    name_label = Label(text="", font='Arial 14')
-    year_label = Label(text="", font='Arial 14')
-    rate_label = Label(text="", font='Arial 14')
-    id_label = Label(text="", font='Arial 14')
-    field_labels = [name_label, year_label, rate_label, id_label]
-
-    btn_name_search = Button(text="Search by name", command=search_by_name)
-    btn_year_search = Button(text="Search by year", command=search_by_year)
-    btn_rate_search = Button(text="Search by rate", command=search_by_rate)
-    btn_id_search = Button(text="Search by id", command=search_by_id)
-
-    btn_name_search.grid(column=4, row=1)
-    btn_year_search.grid(column=4, row=2)
-    btn_rate_search.grid(column=4, row=3)
-    btn_id_search.grid(column=4, row=4)
-
-    enter_name_label = Label(text='Name:', font="Arial 12")
-    enter_year_label = Label(text='Year:', font="Arial 12")
-    enter_rate_label = Label(text='Rating:', font="Arial 12")
-    enter_id_label = Label(text='Id:', font="Arial 12")
-
-    enter_name_label.grid(row=1, column=0, padx=10, pady=10, sticky=N+S+W+E)
-    enter_year_label.grid(row=2, column=0, padx=10, pady=10, sticky=N+S+W+E)
-    enter_rate_label.grid(row=3, column=0, padx=10, pady=10, sticky=N+S+W+E)
-    enter_id_label.grid(row=4, column=0, padx=10, pady=10, sticky=N+S+W+E)
-
-    name_title_label = Label(text='Name:', font="Arial 12")
-    year_title_label = Label(text='Year:', font="Arial 12")
-    rate_title_label = Label(text='Rating:', font="Arial 12")
-    id_title_label = Label(text='Id:', font="Arial 12")
-
-    name_title_label.grid(row=5, column=0, padx=10, pady=10, sticky=N+S+W+E)
-    year_title_label.grid(row=5, column=1, padx=10, pady=10, sticky=N+S+W+E)
-    rate_title_label.grid(row=5, column=2, padx=10, pady=10, sticky=N+S+W+E)
-    id_title_label.grid(row=5, column=3, padx=10, pady=10, sticky=N+S+W+E)
-
-    name_label.grid(row=6, column=0, rowspan=4)
-    year_label.grid(row=6, column=1, rowspan=4)
-    rate_label.grid(row=6, column=2, rowspan=4)
-    id_label.grid(row=6, column=3, rowspan=4)
+    entries = add_entries(root, name_input, year_input, rate_input, id_input)
+    add_labels(root)
+    listboxes = add_scroll_listboxes(root)
+    search_type = add_menu(root)
+    add_buttons(root, entries, main_database, listboxes, search_type)
 
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
