@@ -22,11 +22,47 @@ def add_buttons(root, entries, main_database, listboxes, search_type):
     btn_create_db.place(relheight=0.05, relwidth=0.33)
     btn_delete_db.place(relheight=0.05, relwidth=0.33, relx=0.33)
     btn_open_db.place(relheight=0.05, relwidth=0.34, relx=0.66)
-    btn_save_db.place(relheight=0.05, relwidth=0.5, relx=0.25, rely=0.92)
+    btn_save_db.place(relheight=0.05, relwidth=0.25, relx=0.5, rely=0.92)
 
     btn_name_search = Button(root, text="Search",
-                             command=lambda: search(search_type.get(), entries, main_database, listboxes))
+                             command=lambda: print_data(search(search_type.get(), entries, main_database), listboxes))
+    btn_insert = Button(root, text='Insert',
+                        command=lambda: insert(main_database, entries))
+    btn_drop = Button(root, text='Drop',
+                      command=lambda: drop(search_type.get(), main_database, entries))
+    btn_change = Button(root, text='Change',
+                        command=lambda: change(main_database, entries))
+    btn_make_backup = Button(root, text='Make backup file',
+                             command=lambda: global_action(FilmsDatabase.make_backup, 'Make backup', main_database))
+    btn_from_backup = Button(root, text='Extract from backup',
+                             command=lambda: global_action(FilmsDatabase.from_backup, 'Extract DB', main_database))
     btn_name_search.place(relheight=0.05, relwidth=0.25, rely=0.05)
+    btn_insert.place(relheight=0.05, relwidth=0.25, relx=0.25, rely=0.05)
+    btn_drop.place(relheight=0.05, relwidth=0.25, relx=0.5, rely=0.05)
+    btn_change.place(relheight=0.05, relwidth=0.25, relx=0.75, rely=0.05)
+    btn_make_backup.place(relheight=0.05, relwidth=0.2, relx=0.05, rely=0.92)
+    btn_from_backup.place(relheight=0.05, relwidth=0.2, relx=0.25, rely=0.92)
+
+
+def drop(mode, main_database, entries):
+    search_result = search(mode, entries, main_database)
+    for node in search_result:
+        main_database.delete_node(node[3])
+
+
+def change(main_database, entries):
+    if not main_database.change_node([entries[0].get(),
+                               entries[1].get(),
+                               entries[2].get(),
+                               entries[3].get()]):
+        error_window = Toplevel()
+        error_window.geometry('300x150+750+450')
+        error_window.title('Error')
+        label_error = Label(error_window, text='Node with this id is not exist')
+        label_error.place(relheight=0.25, relwidth=1, rely=0.08)
+        btn_ok = Button(error_window, text='Ok', command=lambda: error_window.destroy())
+        btn_ok.place(relheight=0.3, relwidth=0.4, relx=0.3, rely=0.45)
+
 
 
 def add_labels(root):
@@ -77,7 +113,7 @@ def add_scroll_listboxes(root):
 
 def add_menu(root):
     mb = Menubutton(root, text="Search by...", relief=RAISED)
-    mb.place(relheight=0.05, relwidth=0.25, relx=0.75, rely=0.05)
+    mb.place(relheight=0.05, relwidth=0.2, relx=0.8, rely=0.92)
     mb.menu = Menu(mb, tearoff=0)
     mb["menu"] = mb.menu
 
@@ -106,9 +142,6 @@ def opener(main_database, new_database):
 
 def global_action(func, text, main_database):
     def command_action(main_database):
-        def command_ok():
-            error_window.destroy()
-
         if filename.get():
             returned_value = func(filename.get())
             if returned_value:
@@ -121,7 +154,7 @@ def global_action(func, text, main_database):
             error_window.title('Error')
             label_error = Label(error_window, text='Filename is not specified')
             label_error.place(relheight=0.25, relwidth=1, rely=0.08)
-            btn_ok = Button(error_window, text='Ok', command=command_ok)
+            btn_ok = Button(error_window, text='Ok', command=lambda: error_window.destroy())
             btn_ok.place(relheight=0.3, relwidth=0.4, relx=0.3, rely=0.45)
 
     create_window = Toplevel()
@@ -136,7 +169,7 @@ def global_action(func, text, main_database):
     btn_create.place(relheight=0.2, relwidth=0.5, relx=0.25, rely=0.7)
 
 
-def search(mode, entries, main_database, listboxes):
+def search(mode, entries, main_database):
     """
     :param listboxes:
     :param entries:
@@ -154,14 +187,14 @@ def search(mode, entries, main_database, listboxes):
         search_result = search_functions[mode](entries[mode].get())
     else:
         search_result = []
-    print_data(search_result, listboxes)
+    return search_result
 
 
-def print_db(main_database, listboxes):
+def print_db(main_database, listboxes: list):
     print_data(main_database.db, listboxes)
 
 
-def print_data(data, listboxes):
+def print_data(data, listboxes: list):
     for listbox in listboxes:
         listbox.delete(0, END)
     for row in data:
@@ -169,9 +202,9 @@ def print_data(data, listboxes):
             listboxes[i].insert(END, row[i])
 
 
-'''def add():
-    main_database.add([name_input.get(), year_input.get(),
-                      rate_input.get(), id_input.get()])'''
+def insert(main_database: FilmsDatabase, entries: list):
+    main_database.add([entries[0].get(), entries[1].get(),
+                       entries[2].get(), entries[3].get()])
 
 
 def delete():
@@ -180,19 +213,11 @@ def delete():
 
 
 def main():
-    global main_database
     root = Tk()
     root.title('Interactive database')
     root.geometry('900x700+350+70')
 
-    new_db = FilmsDatabase('IMDB')
-    new_db.add(['Shawshank', '1970', '9.3', '1000222'])
-    new_db.add(['Shawshank2', '1971', '8', '1000223'])
-    new_db.save_db('Data/imdb')
-    new_db.del_db('Data/imdb.hdb')
-    film_db = FilmsDatabase('Data/films.hdb', 'Data/films.hdbd')
-
-    main_database = film_db
+    main_database = FilmsDatabase('config.hdb')
 
     name_input = StringVar()
     year_input = StringVar()

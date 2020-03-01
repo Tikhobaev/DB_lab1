@@ -1,0 +1,15 @@
+INSERT:
+	Count of INSERT operations = 10 Time: 0.0004928112030029297
+	Count of INSERT operations = 100 Time: 0.0046579837799072266
+	Count of INSERT operations = 1000 Time: 0.04831290245056152
+	Count of INSERT operations = 10000 Time: 0.3924560546875
+SEARCH:
+	Count of SEARCH operations = 10 Time: 1.3113021850585938e-05
+	Count of SEARCH operations = 100 Time: 6.771087646484375e-05
+	Count of SEARCH operations = 1000 Time: 0.0010669231414794922
+	Count of SEARCH operations = 10000 Time: 0.00603795051574707
+DROP:
+	Count of DROP operations = 10 Time: 0.0007658004760742188
+	Count of DROP operations = 100 Time: 0.007090091705322266
+	Count of DROP operations = 1000 Time: 0.07093954086303711
+	Count of DROP operations = 10000 Time: 0.772183895111084
